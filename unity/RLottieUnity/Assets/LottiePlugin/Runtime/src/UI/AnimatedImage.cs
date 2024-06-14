@@ -37,42 +37,46 @@ namespace LottiePlugin.UI
 
         private LottieAnimation _lottieAnimation;
         private Coroutine _renderLottieAnimationCoroutine;
-        private WaitForEndOfFrame _waitForEndOfFrame;
+        private readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
 
         private void Awake()
         {
             Transform = transform;
-            _waitForEndOfFrame = new WaitForEndOfFrame();
-        }
-
-        private void Start()
-        {
+			
             if (_animationJson == null)
-            {
                 return;
-            }
+
             if (_rawImage == null)
-            {
                 _rawImage = GetComponent<RawImage>();
-            }
+
             CreateIfNeededAndReturnLottieAnimation();
-            _lottieAnimation.DrawOneFrame(0);
-            if (_playOnAwake && Application.isPlaying)
-            {
+			_lottieAnimation.DrawOneFrame(0);
+
+            if (_playOnAwake)
                 Play();
-            }
+        }
+		private void OnEnable()
+        {
+			Play();
         }
         private void OnDestroy()
         {
             DisposeLottieAnimation();
         }
-
         public void Play()
         {
+			if (_animationJson == null || _rawImage == null)
+				return;
+			
             if (_renderLottieAnimationCoroutine != null)
-            {
+			{
                 StopCoroutine(_renderLottieAnimationCoroutine);
-            }
+				_renderLottieAnimationCoroutine = null;
+			}
+			
+			if (!isActiveAndEnabled)
+				return;
+			
             _lottieAnimation.Play();
             _renderLottieAnimationCoroutine = StartCoroutine(RenderLottieAnimationCoroutine());
         }
@@ -162,14 +166,15 @@ namespace LottiePlugin.UI
         {
             while (true)
             {
-                yield return _waitForEndOfFrame;
+				yield return null;
+				if (_lottieAnimation != null)
+					_lottieAnimation.Update(_animationSpeed);
+				yield return _waitForEndOfFrame;
                 if (_lottieAnimation != null)
                 {
-                    _lottieAnimation.Update(_animationSpeed);
+					_lottieAnimation.DrawOneFrameAsyncGetResult();
                     if (!_loop && _lottieAnimation.CurrentFrame == _lottieAnimation.TotalFramesCount - 1)
-                    {
                         Stop();
-                    }
                 }
             }
         }

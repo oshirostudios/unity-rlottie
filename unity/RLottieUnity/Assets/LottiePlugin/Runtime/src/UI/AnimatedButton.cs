@@ -37,14 +37,12 @@ namespace LottiePlugin.UI
         private int _currentStateIndex;
         private LottieAnimation _lottieAnimation;
         private Coroutine _updateAnimationCoroutine;
-        private WaitForEndOfFrame _waitForEndOfFrame;
+        private WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
 
         protected override void Awake()
         {
             Transform = transform;
-            _waitForEndOfFrame = new WaitForEndOfFrame();
         }
-
         protected override void Start()
         {
             base.Start();
@@ -143,8 +141,12 @@ namespace LottiePlugin.UI
                 _lottieAnimation.CurrentFrame <= _lottieAnimation.TotalFramesCount) ||
                 _lottieAnimation.CurrentFrame < nextState.FrameNumber)
             {
-                yield return _waitForEndOfFrame;
+				yield return null;
                 _lottieAnimation.Update(_animationSpeed);
+				
+                yield return _waitForEndOfFrame;
+				_lottieAnimation.DrawOneFrameAsyncGetResult();
+				
                 if (_lottieAnimation.CurrentFrame == 0)
                 {
                     _updateAnimationCoroutine = null;
