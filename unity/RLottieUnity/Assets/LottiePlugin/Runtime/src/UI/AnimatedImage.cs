@@ -46,11 +46,9 @@ namespace LottiePlugin.UI
             if (_animationJson == null)
                 return;
 
-            if (_rawImage == null)
-                _rawImage = GetComponent<RawImage>();
-
             CreateIfNeededAndReturnLottieAnimation();
-			_lottieAnimation.DrawOneFrame(0);
+
+			_lottieAnimation?.DrawOneFrame(0);
 
             if (_playOnAwake)
                 Play();
@@ -77,12 +75,12 @@ namespace LottiePlugin.UI
 			if (!isActiveAndEnabled)
 				return;
 			
-            _lottieAnimation.Play();
+            _lottieAnimation?.Play();
             _renderLottieAnimationCoroutine = StartCoroutine(RenderLottieAnimationCoroutine());
         }
         public void Pause()
         {
-            _lottieAnimation.Pause();
+            _lottieAnimation?.Pause();
         }
         public void Stop()
         {
@@ -91,31 +89,32 @@ namespace LottiePlugin.UI
                 StopCoroutine(_renderLottieAnimationCoroutine);
                 _renderLottieAnimationCoroutine = null;
             }
-            _lottieAnimation.Stop();
-            int lastFrame = (int)_lottieAnimation.TotalFramesCount - 1;
-            _lottieAnimation.DrawOneFrame(_stopOnLastFrame ? lastFrame : 0);
+            _lottieAnimation?.Stop();
+            int lastFrame = (int)_lottieAnimation?.TotalFramesCount - 1;
+            _lottieAnimation?.DrawOneFrame(_stopOnLastFrame ? lastFrame : 0);
         }
         public void LoadFromAnimationJson(string json, uint width, uint height, string resourcesPath = "")
         {
             if (string.IsNullOrWhiteSpace(json))
-            {
                 throw new System.ArgumentException("The json parameter should be not null or empty");
-            }
+
             if (_rawImage == null)
-            {
                 _rawImage = GetComponent<RawImage>();
-            }
+
             if (_rawImage == null)
-            {
-                throw new System.InvalidOperationException(
-                    "Can not find the RawImage component on the current game object: " + gameObject.name);
-            }
+                throw new System.InvalidOperationException("Can not find the RawImage component on the current game object: " + gameObject.name);
+
             DisposeLottieAnimation();
+
             _lottieAnimation = LottieAnimation.LoadFromJsonData(
                 json,
                 resourcesPath,
                 width,
                 height);
+
+            if (_lottieAnimation == null)
+                throw new System.InvalidOperationException("The json file that was loaded failed to create the animation: " + gameObject.name);
+
             _rawImage.texture = _lottieAnimation.Texture;
             _lottieAnimation.Started += OnAnimationStarted;
             _lottieAnimation.Paused += OnAnimationPaused;
@@ -125,71 +124,69 @@ namespace LottiePlugin.UI
         internal LottieAnimation CreateIfNeededAndReturnLottieAnimation()
         {
             if (_animationJson == null)
-            {
                 return null;
-            }
+
             if (_rawImage == null)
-            {
                 _rawImage = GetComponent<RawImage>();
-            }
+
             if (_rawImage == null)
-            {
                 return null;
-            }
-            if (_lottieAnimation == null)
-            {
-                _lottieAnimation = LottieAnimation.LoadFromJsonData(
+
+            if (_lottieAnimation != null) 
+                return _lottieAnimation;
+
+            _lottieAnimation = LottieAnimation.LoadFromJsonData(
                 _animationJson.text,
                 string.Empty,
                 _textureWidth,
                 _textureHeight);
-                _rawImage.texture = _lottieAnimation.Texture;
-                _lottieAnimation.Started += OnAnimationStarted;
-                _lottieAnimation.Paused += OnAnimationPaused;
-                _lottieAnimation.Stopped += OnAnimationStopped;
-            }
+
+            if (_lottieAnimation == null)
+                return null;
+
+            _rawImage.texture = _lottieAnimation.Texture;
+
+            _lottieAnimation.Started += OnAnimationStarted;
+            _lottieAnimation.Paused += OnAnimationPaused;
+            _lottieAnimation.Stopped += OnAnimationStopped;
+
             return _lottieAnimation;
         }
         internal void DisposeLottieAnimation()
         {
-            if (_lottieAnimation != null)
-            {
-                _lottieAnimation.Started -= OnAnimationStarted;
-                _lottieAnimation.Paused -= OnAnimationPaused;
-                _lottieAnimation.Stopped -= OnAnimationStopped;
-                _lottieAnimation.Dispose();
-                _lottieAnimation = null;
-            }
+            if (_lottieAnimation == null) 
+                return;
+
+            _lottieAnimation.Started -= OnAnimationStarted;
+            _lottieAnimation.Paused -= OnAnimationPaused;
+            _lottieAnimation.Stopped -= OnAnimationStopped;
+            _lottieAnimation.Dispose();
+            _lottieAnimation = null;
         }
 
         private IEnumerator RenderLottieAnimationCoroutine()
         {
             while (true)
             {
-				yield return null;
-				if (_lottieAnimation != null)
-					_lottieAnimation.Update(_animationSpeed);
-				yield return _waitForEndOfFrame;
-                if (_lottieAnimation != null)
-                {
-					_lottieAnimation.DrawOneFrameAsyncGetResult();
-                    if (!_loop && _lottieAnimation.CurrentFrame == _lottieAnimation.TotalFramesCount - 1)
-                        Stop();
-                }
+                yield return _waitForEndOfFrame;
+				_lottieAnimation?.Update(_animationSpeed);
+
+                if (!_loop && _lottieAnimation?.CurrentFrame == _lottieAnimation?.TotalFramesCount - 1)
+                    Stop();
             }
         }
 
         private void OnAnimationStarted(LottieAnimation animation)
         {
-            Started.Invoke(this);
+            Started?.Invoke(this);
         }
         private void OnAnimationPaused(LottieAnimation animation)
         {
-            Paused.Invoke(this);
+            Paused?.Invoke(this);
         }
         private void OnAnimationStopped(LottieAnimation animation)
         {
-            Stopped.Invoke(this);
+            Stopped?.Invoke(this);
         }
     }
 }

@@ -47,11 +47,9 @@ namespace LottiePlugin.UI
         {
             base.Start();
             if (_animationJson == null)
-            {
                 return;
-            }
             CreateIfNeededAndReturnLottieAnimation();
-            _lottieAnimation.DrawOneFrame(_states[0].FrameNumber);
+            _lottieAnimation?.DrawOneFrame(_states[0].FrameNumber);
         }
         protected override void OnDestroy()
         {
@@ -77,59 +75,51 @@ namespace LottiePlugin.UI
         internal LottieAnimation CreateIfNeededAndReturnLottieAnimation()
         {
             if (_animationJson == null)
-            {
                 return null;
-            }
             if (_rawImage == null)
-            {
                 return null;
-            }
-            if (_lottieAnimation == null)
-            {
-                _lottieAnimation = LottieAnimation.LoadFromJsonData(
+            if (_lottieAnimation != null) 
+                return _lottieAnimation;
+
+            _lottieAnimation = LottieAnimation.LoadFromJsonData(
                 _animationJson.text,
                 string.Empty,
                 _textureWidth,
                 _textureHeight);
-                SetTextureToTheTargetRawImage();
-            }
+            SetTextureToTheTargetRawImage();
+
             return _lottieAnimation;
         }
         internal void SetTextureToTheTargetRawImage()
         {
             if (_lottieAnimation == null)
-            {
                 return;
-            }
+
             _rawImage.texture = _lottieAnimation.Texture;
         }
         internal void DisposeLottieAnimation()
         {
-            if (_lottieAnimation != null)
-            {
-                _lottieAnimation.Dispose();
-                _lottieAnimation = null;
-            }
+            if (_lottieAnimation == null) 
+                return;
+
+            _lottieAnimation.Dispose();
+            _lottieAnimation = null;
         }
 
         private void Press()
         {
-            if (!IsActive() ||
-                !IsInteractable() ||
-                (_updateAnimationCoroutine != null && _ignoreInputWhileAnimating))
-            {
+            if (!IsActive() || !IsInteractable() || (_updateAnimationCoroutine != null && _ignoreInputWhileAnimating))
                 return;
-            }
+
             _onClick.Invoke(_currentStateIndex, _states[_currentStateIndex]);
+
             if (_updateAnimationCoroutine != null)
-            {
                 StopCoroutine(_updateAnimationCoroutine);
-            }
+
             _currentStateIndex++;
             if (_currentStateIndex >= _states.Length)
-            {
                 _currentStateIndex = 0;
-            }
+
             _updateAnimationCoroutine = StartCoroutine(AnimateToNextState());
         }
         private IEnumerator AnimateToNextState()
@@ -141,11 +131,8 @@ namespace LottiePlugin.UI
                 _lottieAnimation.CurrentFrame <= _lottieAnimation.TotalFramesCount) ||
                 _lottieAnimation.CurrentFrame < nextState.FrameNumber)
             {
-				yield return null;
-                _lottieAnimation.Update(_animationSpeed);
-				
                 yield return _waitForEndOfFrame;
-				_lottieAnimation.DrawOneFrameAsyncGetResult();
+                _lottieAnimation.Update(_animationSpeed);
 				
                 if (_lottieAnimation.CurrentFrame == 0)
                 {

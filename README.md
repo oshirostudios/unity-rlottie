@@ -33,7 +33,11 @@ To install the Unity Lottie Animation to Texture2D plugin using the Unity Packag
 2. Click the `+` button in the top-left corner and select `Add package from git URL...`.
 3. Enter the following URL and click `Add`:
    ```
-   https://github.com/gindemit/unity-rlottie.git?path=/unity/RLottieUnity/Assets/LottiePlugin/#0.2.2
+   https://github.com/oshirostudios/unity-rlottie.git?path=/unity/RLottieUnity/Assets/LottiePlugin/
+   ```
+4. To request a specific version, add the version number to the end:
+   ```
+   https://github.com/oshirostudios/unity-rlottie.git?path=/unity/RLottieUnity/Assets/LottiePlugin/#0.3.0
    ```
 
 ## Quick Start
