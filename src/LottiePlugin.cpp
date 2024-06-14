@@ -1,4 +1,5 @@
 #include "LottiePlugin.h"
+#include "vdebug.h"
 
 extern "C" {
 
@@ -25,7 +26,10 @@ extern "C" {
         return animation_wrapper;
     }
 
-    EXPORT_API int32_t lottie_load_from_data(const char* json_data, const char* resource_path, lottie_animation_wrapper** animation_wrapper) {
+    EXPORT_API int32_t lottie_load_from_data(
+      const char* json_data,
+      const char* resource_path,
+      lottie_animation_wrapper** animation_wrapper) {
         const std::function<void(float& r, float& g, float& b)>& null_func = nullptr;
         auto animation = rlottie::Animation::loadFromData(std::string(json_data), std::string(resource_path), null_func);
         if(!animation) {
@@ -35,7 +39,9 @@ extern "C" {
         *animation_wrapper = create_animation_wrapper(animation);
         return *animation_wrapper == nullptr ? -1 : 0;
     }
-    EXPORT_API int32_t lottie_load_from_file(const char* file_path, lottie_animation_wrapper** animation_wrapper) {
+    EXPORT_API int32_t lottie_load_from_file(
+      const char* file_path,
+      lottie_animation_wrapper** animation_wrapper) {
         auto animation = rlottie::Animation::loadFromFile(std::string(file_path));
 
         if(!animation) {
@@ -99,6 +105,25 @@ extern "C" {
     EXPORT_API int32_t lottie_dispose_render_data(lottie_render_data** render_data) {
         delete (*render_data);
         *render_data = nullptr;
+        return 0;
+    }
+    EXPORT_API int32_t initialize_logger(const char* log_dir_path, const char* log_file_name, int32_t log_file_roll_size_mb) {
+        fprintf(stderr, "Initializing logger (stderr)\n");
+        // print the paths
+        fprintf(stderr, "log_dir_path: %s\n", log_dir_path);
+        fprintf(stderr, "log_file_name: %s\n", log_file_name);
+        fprintf(stderr, "log_file_roll_size_mb: %d\n", log_file_roll_size_mb);
+        fprintf(stdout, "Initializing logger (stdout)\n");
+        initialize(GuaranteedLogger(), std::string(log_dir_path), std::string(log_file_name), log_file_roll_size_mb);
+        set_log_level(LogLevel::INFO);
+
+        vDebug << "Initialized logger (debug) test message";
+        vWarning << "Initialized logger (warning) test message";
+        vCritical << "Initialized logger (critical) test message";
+        // print the paths
+        vDebug << "log_dir_path: " << log_dir_path;
+        vDebug << "log_file_name: " << log_file_name;
+        vDebug << "log_file_roll_size_mb: " << log_file_roll_size_mb;
         return 0;
     }
 }

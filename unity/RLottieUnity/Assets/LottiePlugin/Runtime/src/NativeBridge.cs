@@ -86,6 +86,14 @@ namespace LottiePlugin
             EntryPoint = "lottie_dispose_render_data")]
         internal static extern int LottieDisposeRenderData(
             ref IntPtr animationWrapper);
+        
+        [DllImport(PLUGIN_NAME,
+            CallingConvention = CallingConvention.Cdecl,
+            EntryPoint = "initialize_logger")]
+        internal static extern int InitializeLogger(
+            string logDirectoryPath,
+            string logFileName,
+            int logFileRollSizeMB);
 
         internal static LottieAnimationWrapper LoadFromData(string filePath, string resourcesPath, out IntPtr animationWrapper)
         {
